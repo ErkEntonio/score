@@ -31,14 +31,20 @@ MIDIInputSettingsWidget::MIDIInputSettingsWidget(QWidget* parent)
   m_name = new State::AddressFragmentLineEdit{this};
   checkForChanges(m_name);
   m_createWhole = new QCheckBox{tr("Create whole tree"), this};
+  m_virtualPort = new QCheckBox{tr("Virtual Port"),this};
 
   auto lay = new QFormLayout;
   lay->addRow(tr("Name"), m_name);
   lay->addRow(m_createWhole);
+  lay->addRow(m_virtualPort);
 
   setLayout(lay);
   m_createWhole->setChecked(false);
   m_createWhole->setEnabled(true);
+  m_virtualPort->setChecked(false);
+  #if !__WIN32
+  m_virtualPort->setEnabled(false);
+  #endif
 }
 
 Device::DeviceSettings MIDIInputSettingsWidget::getSettings() const
@@ -49,6 +55,7 @@ Device::DeviceSettings MIDIInputSettingsWidget::getSettings() const
   s.name = m_name->text();
   s.protocol = MIDIInputProtocolFactory::static_concreteKey();
   midi.createWholeTree = m_createWhole->isChecked();
+  midi.virtualPort = m_virtualPort->isChecked();
 
   s.deviceSpecificSettings = QVariant::fromValue(midi);
 
@@ -61,6 +68,7 @@ void MIDIInputSettingsWidget::setSettings(
   m_current = settings;
   const auto& s = m_current.deviceSpecificSettings.value<MIDISpecificSettings>();
   m_createWhole->setChecked(s.createWholeTree);
+  m_virtualPort->setChecked(s.virtualPort);
 
   // Clean up the name a bit
   auto pretty_name = settings.name;
@@ -83,14 +91,20 @@ MIDIOutputSettingsWidget::MIDIOutputSettingsWidget(QWidget* parent)
   m_name = new State::AddressFragmentLineEdit{this};
   checkForChanges(m_name);
   m_createWhole = new QCheckBox{tr("Create whole tree"), this};
+  m_virtualPort = new QCheckBox{tr("Virtual Port"),this};
 
   auto lay = new QFormLayout;
   lay->addRow(tr("Name"), m_name);
   lay->addRow(m_createWhole);
+  lay->addRow(m_virtualPort);
 
   setLayout(lay);
   m_createWhole->setChecked(false);
   m_createWhole->setEnabled(true);
+  m_virtualPort->setChecked(false);
+  #if __WIN32
+  m_virtualPort->setEnabled(false);
+  #endif
 }
 
 Device::DeviceSettings MIDIOutputSettingsWidget::getSettings() const
@@ -123,9 +137,9 @@ void MIDIOutputSettingsWidget::setSettings(
 
   if (settings.deviceSpecificSettings.canConvert<MIDISpecificSettings>())
   {
-    m_createWhole->setChecked(
-        settings.deviceSpecificSettings.value<MIDISpecificSettings>()
-            .createWholeTree);
+    const auto& s = m_current.deviceSpecificSettings.value<MIDISpecificSettings>();
+    m_createWhole->setChecked(s.createWholeTree);
+    m_virtualPort->setChecked(s.virtualPort);
   }
 }
 
