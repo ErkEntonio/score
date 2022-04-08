@@ -53,7 +53,7 @@ bool MIDIDevice::reconnect()
     bool res = proto->set_info(ossia::net::midi::midi_info(
         static_cast<ossia::net::midi::midi_info::Type>(set.io),
         set.endpoint.toStdString(),
-        set.port));
+        set.port),set.virtualPort);
     if (!res)
       return false;
 
